@@ -1,0 +1,26 @@
+Copyright (c) 1999 Sullivan Beck. All rights reserved.
+This program is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
+
+Many times, I've wanted to quickly write a nice text-based user interface
+around a set of perl routines only to end up writing the full (though
+simple) parser and interface to make it nice enough, and friendly enough,
+to be usable.
+
+This module creates a simple but powerful text based user interface around
+perl routines, adding such features as command line history, command line
+editing, and online help (command completion will also be implemented),
+while hiding all details of the interface from the programmer.
+
+This module requires that Term::ReadLine be installed.  It will make use
+of Term::ReadLine::GNU (tested) or Term::ReadLine::Perl (untested) if
+they are installed.
+
+The file "sample.pl" contains the example interface from the man page.
+Run it to experiment with how the interface feels.
+
+AUTHOR
+
+Sullivan Beck (sbeck@cise.ufl.edu)
+
