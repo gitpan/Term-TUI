@@ -1,5 +1,5 @@
 #!/usr/local/bin/perl -w
-# Copyright (c) 1999 Sullivan Beck. All rights reserved.
+# Copyright (c) 1999-2005 Sullivan Beck. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
@@ -29,7 +29,7 @@ use Term::TUI qw(:all);
 $flag=&TUI_Run("sample",\%modes);
 print "*** ABORT ***\n"  if ($flag);
 
-print "\nScript\n\n";
+print "\nScript Sample:\n\n";
 
 &TUI_Script(\%modes,"/math add 3 5; string; subs barnyard 1 3");
 

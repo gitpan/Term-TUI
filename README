@@ -1,4 +1,4 @@
-Copyright (c) 1999 Sullivan Beck. All rights reserved.
+Copyright (c) 1999-2005 Sullivan Beck. All rights reserved.
 This program is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
@@ -22,5 +22,5 @@ Run it to experiment with how the interface feels.
 
 AUTHOR
 
-Sullivan Beck (sbeck@cise.ufl.edu)
+Sullivan Beck (sbeck@cpan.org)
 

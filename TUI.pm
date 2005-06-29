@@ -1,5 +1,5 @@
 package Term::TUI;
-# Copyright (c) 1999 Sullivan Beck. All rights reserved.
+# Copyright (c) 1999-2005 Sullivan Beck. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
@@ -7,24 +7,44 @@ package Term::TUI;
 # TODO
 ########################################################################
 
-# add completion (if Term::ReadLine::Gnu or Term::ReadLine::Perl)
+# improve completion:
+#    /math
+#    ad<TAB>
+# completes correctly to add but
+#    /math/ad<TAB>
+# doesn't autocomplete.
+
 # add abbreviation
 # case insensitivity
 # add .. and . to valid mode strings
+
+# "Hr. Jochen Stenzel" <Jochen.Stenzel.gp@icn.siemens.de>
+#    alias command
+#    history file (stored last commands)
+
+# config file (store commands to execute)
 
 ########################################################################
 # HISTORY
 ########################################################################
 
 # Written by:
-#    Sullivan Beck (sbeck@cise.ufl.edu)
+#    Sullivan Beck (sbeck@cpan.org)
 # Any suggestions, bug reports, or donations :-) should be sent to me.
 
 # Version 1.00  1999-11-03
 #    Initial creation
+#
+# Version 1.10  1999-12-03
+#    Added simple test file to make automatic CPAN scripts work nicer.
+#
+# Version 1.20  2005-06-29
+#    Added command completion.  Patch provided by mmcclure@pneservices.com
+#      Requires Term::ReadLine::Gnu
+#    Changed split to Text::ParseWords::shellwords.  mmcclure@pneservices.com
 
 use vars qw($VERSION);
-$VERSION="1.00";
+$VERSION="1.20";
 
 ########################################################################
 
@@ -32,6 +52,7 @@ require 5.000;
 require Exporter;
 
 use Term::ReadLine;
+use Text::ParseWords;
 #use Text::Abbrev;
 
 @ISA = qw(Exporter);
@@ -48,22 +69,47 @@ sub TUI_Version {
 BEGIN {
   my($term,$out);
 
+  #
+  # Takes a program name (to be used in the prompt) and an interface
+  # description, and runs with it.
+  #
+
+  #
+  # Interactive version.
+  #
   sub TUI_Run {
     my($program,$hashref)=@_;
     my(@mode,$line,$err);
     my($prompt)="$program> ";
     $term=new Term::ReadLine $program;
     $term->ornaments(0);
+
+    # Command line completion
+    $term->Attribs->{'do_expand'}=1;
+    $term->Attribs->{'completion_entry_function'} =
+        $term->Attribs->{'list_completion_function'};
+
     $out=$term->OUT || STDOUT;
 
     my($ret)=0;
+
+    # Command line completion
+    # The strings for completion
+    my(@completions) = GetStrings(\@mode,$hashref);
+    $term->Attribs->{'completion_word'} = \@completions;
+
     while (defined ($line=$term->readline($prompt)) ) {
       $err=&Line(\@mode,$hashref,$line);
+
+      # Command line completion
+      @completions = GetStrings(\@mode,$hashref);
+      $term->Attribs->{'completion_word'} = \@completions;
+
       if ($err =~ /^exit\[(\d+)\]$/) {
         $ret=$1;
         last;
       }
-      print $out $err  if ($err);
+      print $out $err  if ($err && $err !~ /^\d+$/);
 
       if (@mode) {
         $prompt=$program . ":" . join("/",@mode) . "> ";
@@ -74,6 +120,9 @@ BEGIN {
     return $ret;
   }
 
+  #
+  # Non-interactive version.
+  #
   sub TUI_Script {
     my($hashref,$script,$sep)=@_;
     $out=STDOUT;
@@ -94,6 +143,9 @@ BEGIN {
     return $ret;
   }
 
+  #
+  # Prints a message.
+  #
   sub TUI_Out {
     my($mess)=@_;
     print $out $mess;
@@ -105,6 +157,44 @@ BEGIN {
 # NOT FOR EXPORT
 ########################################################################
 
+{
+  # Stuff for doing completion.
+
+  my $i;
+  my @matches;
+
+  sub TUI_completion_function {
+    my($text,$state)=@_;
+    $i = ($state ? $i : 0);
+
+    if (! $i) {
+      if ($text =~ /^\s*(\S+)\s+(\S+)$/) {
+        # MODE CMD^
+        #    completes CMD
+        # MODE/CMD OPTION^
+        #    no matches
+
+      } elsif ($text =~ /^\s*(\S+)\s+$/) {
+        # MODE ^
+        #    completes CMD
+        # MODE/CMD ^
+        #    no matches
+
+      } elsif ($text =~ /^\s*(\S+)$/) {
+        # MODE^
+        # MODE/CMD^
+
+      } else {
+        @matches=();
+      }
+    }
+  }
+}
+
+#
+# Takes the current mode (as a list), the interface description, and
+# the current line and acts on the line.
+#
 sub Line {
   my($moderef,$cmdref,$line)=@_;
 
@@ -112,7 +202,7 @@ sub Line {
   $line =~ s/^\s+//;
   return  if (! $line);
 
-  my(@cmd)=split(/\s+/,$line);
+  my(@cmd)=shellwords($line);
   return &Cmd($moderef,$cmdref,@cmd);
 }
 
@@ -128,6 +218,29 @@ BEGIN {
     );
   my($Moderef,$Cmdref);
 
+  #
+  # Returns an array of strings (commands or modes) that can be
+  # entered given a mode
+  #
+  sub GetStrings {
+    my ($moderef,$cmdref) = @_;
+    my @strings;
+
+    if (!defined $Cmdref || ref $Cmdref ne "HASH") {
+      $Cmdref = $cmdref;
+    }
+    my $desc = GetMode(@{$moderef});
+    if ( ref $desc eq "HASH" ) {
+      @strings = grep !/^\./, sort keys %$desc;
+    }
+    push @strings,keys %Cmds;
+    return @strings;
+  }
+
+  #
+  # Takes the current mode (as a list), the interface description, and the
+  # current command (as a list) and executes the command.
+  #
   sub Cmd {
     my($moderef,$cmdref,@args)=@_;
     my($cmd)=shift(@args);
@@ -178,23 +291,10 @@ BEGIN {
     }
   }
 
-  sub GetMode {
-    my(@mode)=@_;
-    my($tmp)=$Cmdref;
-    my($mode);
-
-    foreach $mode (@mode) {
-      if (exists $$tmp{$mode}  &&
-          ref $$tmp{$mode} eq "HASH") {
-        $tmp=$$tmp{$mode};
-      } else {
-        $tmp="";
-        last;
-      }
-    }
-    $tmp;
-  }
-
+  #
+  # Takes a mode and/or command (as a list) and determines the mode
+  # to use.  Returns a description of that mode.
+  #
   sub CheckMode {
     my($cmdref)=@_;
     my($cmd)=$$cmdref;
@@ -219,6 +319,35 @@ BEGIN {
     return ($tmp,@mode);
   }
 
+  #
+  # Takes a mode (as a list) and returns it's description (or "" if it's
+  # not a mode).
+  #
+  sub GetMode {
+    my(@mode)=@_;
+    my($tmp)=$Cmdref;
+    my($mode);
+
+    foreach $mode (@mode) {
+      if (exists $$tmp{$mode}  &&
+          ref $$tmp{$mode} eq "HASH") {
+        $tmp=$$tmp{$mode};
+      } else {
+        $tmp="";
+        last;
+      }
+    }
+    $tmp;
+  }
+
+  ##############################################
+
+  #
+  # A command to change the mode.
+  #    ..    op=0
+  #    /     op=1
+  #    MODE  op=2
+  #
   sub Mode {
     my($op,@mode)=@_;
 
@@ -314,6 +443,9 @@ BEGIN {
   }
 }
 
+#
+# Takes a mode and command and return a description of the command.
+#
 sub CheckCmd {
   my($moderef,$cmd)=@_;
   return $$moderef{$cmd}
@@ -328,6 +460,19 @@ sub Exit {
 }
 
 1;
+
+#    sub {
+#      map {lc($_)} (keys %commands, keys %aliases)
+#    };
+
+#  $term->Attribs->{'do_expand'}=1;
+#  $term->Attribs->{'completion_entry_function'} =
+#    sub {
+#      $term->Attribs->{'line_buffer'} =~ /\s/ ?
+#        &{$term->Attribs->{'filename_completion_function'}}(@_) :
+#          &{$term->Attribs->{'list_completion_function'}}(@_)
+#        };
+#  $term->Attribs->{'completion_word'}=[(map {lc($_)} (keys %commands))];
 
 ########################################################################
 ########################################################################
@@ -418,7 +563,7 @@ message to STDOUT.
 The interface allows you to describe multiple "modes" organized in
 a simple tree-like hierarchy (or modes, submodes, subsubmodes, etc.),
 each of which has it's own set of commands specific to that mode.  I've
-modelled it after a unix filesystem with directories being "modes" and
+modeled it after a unix filesystem with directories being "modes" and
 executables being equivalent to commands.  So, you might want to model
 the following tree:
 
@@ -573,6 +718,6 @@ None known at this point.
 
 =head1 AUTHOR
 
-Sullivan Beck (sbeck@cise.ufl.edu)
+Sullivan Beck (sbeck@cpan.org)
 
 =cut

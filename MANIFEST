@@ -1,6 +1,7 @@
-INSTALL
 MANIFEST
+INSTALL
 Makefile.PL
 README
 TUI.pm
 sample.pl
+t/use.t
