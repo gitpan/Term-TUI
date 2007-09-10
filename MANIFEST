@@ -1,5 +1,4 @@
 MANIFEST
-INSTALL
 Makefile.PL
 README
 TUI.pm

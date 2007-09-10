@@ -1,7 +1,4 @@
 #!/usr/local/bin/perl -w
-# Copyright (c) 1999-2005 Sullivan Beck. All rights reserved.
-# This program is free software; you can redistribute it and/or modify it
-# under the same terms as Perl itself.
 
 use Term::TUI qw(:all);
 

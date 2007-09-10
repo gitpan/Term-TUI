@@ -1,5 +1,5 @@
 package Term::TUI;
-# Copyright (c) 1999-2005 Sullivan Beck. All rights reserved.
+# Copyright (c) 1999-2007 Sullivan Beck. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
@@ -15,7 +15,9 @@ package Term::TUI;
 # doesn't autocomplete.
 
 # add abbreviation
+
 # case insensitivity
+
 # add .. and . to valid mode strings
 
 # "Hr. Jochen Stenzel" <Jochen.Stenzel.gp@icn.siemens.de>
@@ -99,7 +101,7 @@ BEGIN {
     $term->Attribs->{'completion_word'} = \@completions;
 
     while (defined ($line=$term->readline($prompt)) ) {
-      $err=&Line(\@mode,$hashref,$line);
+      $err=Line(\@mode,$hashref,$line);
 
       # Command line completion
       @completions = GetStrings(\@mode,$hashref);
@@ -133,7 +135,7 @@ BEGIN {
     my($err,$cmd,@mode);
     my($ret)=0;
     foreach $cmd (@cmd) {
-      $err=&Line(\@mode,$hashref,$cmd);
+      $err=Line(\@mode,$hashref,$cmd);
       if ($err =~ /^exit\[(\d+)\]$/) {
         $ret=$1;
         last;
@@ -203,7 +205,7 @@ sub Line {
   return  if (! $line);
 
   my(@cmd)=shellwords($line);
-  return &Cmd($moderef,$cmdref,@cmd);
+  return Cmd($moderef,$cmdref,@cmd);
 }
 
 BEGIN {
@@ -252,21 +254,21 @@ BEGIN {
       $desc=$Cmds{lc $cmd};
 
     } else {
-      ($mode,@mode)=&CheckMode(\$cmd);
+      ($mode,@mode)=CheckMode(\$cmd);
 
       if ($mode && $cmd) {
         #
         # MODE/CMD [ARGS]
         # CMD [ARGS]
         #
-        $desc=&CheckCmd($mode,$cmd);
+        $desc=CheckCmd($mode,$cmd);
 
       } elsif ($mode && @args) {
         #
         # MODE CMD [ARGS]
         #
         $cmd=shift(@args);
-        $desc=&CheckCmd($mode,$cmd);
+        $desc=CheckCmd($mode,$cmd);
 
       } elsif ($mode) {
         #
@@ -306,12 +308,12 @@ BEGIN {
       @mode=(@$Moderef,split(m|/|,$cmd));
     }
 
-    my($tmp)=&GetMode(@mode);
+    my($tmp)=GetMode(@mode);
     if ($tmp) {
       $$cmdref="";
     } else {
       $tmp2=pop(@mode);
-      $tmp=&GetMode(@mode);
+      $tmp=GetMode(@mode);
       $$cmdref=$tmp2  if ($tmp);
     }
 
@@ -378,11 +380,11 @@ BEGIN {
 
     my($tmp,$mode,@mode);
 
-    ($tmp,@mode)=&CheckMode(\$cmd)  if ($cmd);
+    ($tmp,@mode)=CheckMode(\$cmd)  if ($cmd);
     if (! $tmp) {
       @mode=@$Moderef;
       if (@mode) {
-        $tmp=&GetMode(@mode);
+        $tmp=GetMode(@mode);
       } else {
         $tmp=$Cmdref;
       }
@@ -459,8 +461,6 @@ sub Exit {
   return "exit[$flag]";
 }
 
-1;
-
 #    sub {
 #      map {lc($_)} (keys %commands, keys %aliases)
 #    };
@@ -480,6 +480,8 @@ sub Exit {
 ########################################################################
 ########################################################################
 
+=pod
+
 =head1 NAME
 
 Term::TUI - simple tool for building text-based user interfaces
@@ -489,18 +491,18 @@ Term::TUI - simple tool for building text-based user interfaces
 If TUI_Run is the only routine being used:
 
   use Term::TUI;
-  $flag=&TUI_Run($command,\%desc);
+  $flag=TUI_Run($command,\%desc);
 
-  $version=&Term::TUI::TUI_Version;
+  $version=Term::TUI::TUI_Version;
 
 If other TUI subroutines are used:
 
   use Term::TUI qw(:all);
-  $flag=&TUI_Run($command,\%desc);
+  $flag=TUI_Run($command,\%desc);
 
-  &TUI_Out($message);
+  TUI_Out($message);
 
-  $flag=&TUI_Script(\%desc,$script,$sep);
+  $flag=TUI_Script(\%desc,$script,$sep);
 
 =head1 DESCRIPTION
 
@@ -511,8 +513,8 @@ to be usable.
 
 This module creates a simple but powerful text based user interface around
 perl routines, adding such features as command line history, command line
-editing, and online help (command completion will also be implemented),
-while hiding all details of the interface from the programmer.
+editing, online help, and command completion, while hiding all details of
+the interface from the programmer.
 
 The interface is described in a simple hash which is passed to the
 B<TUI_Run> command.  This routine exits only when the user has exited
@@ -525,7 +527,7 @@ the program (returning a flag signalling any special exit conditions).
 =item TUI_Run
 
   use Term::TUI;
-  $flag=&TUI_Run($command,\%desc);
+  $flag=TUI_Run($command,\%desc);
 
 The TUI_Run command is used to run the interface.  It prompts the user
 for commands and executes them (based on description of passed in as
@@ -535,7 +537,7 @@ with the Abort command when it is 1.
 =item TUI_Script
 
   use Term::TUI qw(:all);
-  $flag=&TUI_Script(\%desc,$script [,$sep]);
+  $flag=TUI_Script(\%desc,$script [,$sep]);
 
 This allows you to pass in commands in a "script" instead of an interactive
 session.  The script is a series of commands separated by a semicolon
@@ -544,14 +546,14 @@ session.  The script is a series of commands separated by a semicolon
 =item TUI_Version
 
   use Term::TUI qw(:all);
-  $vers=&TUI_Version;
+  $vers=TUI_Version;
 
 Returns the version of the module.
 
 =item TUI_Out
 
   use Term::TUI qw(:all);
-  &TUI_Out($mess);
+  TUI_Out($mess);
 
 This is used in the routines given in the description hash to send a
 message to STDOUT.
@@ -572,7 +574,7 @@ the following tree:
       math                 string
       |                    |
       +-----+-----+        +------+
-      hex   add*  mult*    len*   substr*
+      hex   add*  mult*    len*   subs*
       |
       +-----+
       add*  mult*
@@ -607,7 +609,7 @@ be written with the following 2 perl commands:
                  }
    );
 
-   $flag=&TUI_Run("sample",\%modes);
+   $flag=TUI_Run("sample",\%modes);
    print "*** ABORT ***\n"  if ($flag);
 
 You also have to write an Add, Mult, Substring, and Length subroutine
@@ -701,7 +703,7 @@ user interface.  It's mainly intended for simple control or config tools
 There is also a non-interactive form which allows the same interface to
 be called in scripts.
 
-   &TUI_Script(\%modes,"/math add 3 5; string; subs barnyard 1 3");
+   TUI_Script(\%modes,"/math add 3 5; string; subs barnyard 1 3");
 
 returns
 
@@ -721,3 +723,9 @@ None known at this point.
 Sullivan Beck (sbeck@cpan.org)
 
 =cut
+
+1;
+# Local Variables:
+# indent-tabs-mode: nil
+# End:
+
