@@ -1,6 +1,13 @@
-MANIFEST
+Build.PL
+HISTORY
+LICENSE
 Makefile.PL
+MANIFEST			This list of files
+META.yml
 README
-TUI.pm
 sample.pl
+t/pod.t
+t/pod_coverage.t
+t/runtests
 t/use.t
+TUI.pm

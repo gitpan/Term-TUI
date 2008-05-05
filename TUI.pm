@@ -1,5 +1,5 @@
 package Term::TUI;
-# Copyright (c) 1999-2007 Sullivan Beck. All rights reserved.
+# Copyright (c) 1999-2008 Sullivan Beck. All rights reserved.
 # This program is free software; you can redistribute it and/or modify it
 # under the same terms as Perl itself.
 
@@ -27,28 +27,10 @@ package Term::TUI;
 # config file (store commands to execute)
 
 ########################################################################
-# HISTORY
-########################################################################
 
-# Written by:
-#    Sullivan Beck (sbeck@cpan.org)
-# Any suggestions, bug reports, or donations :-) should be sent to me.
-
-# Version 1.00  1999-11-03
-#    Initial creation
-#
-# Version 1.10  1999-12-03
-#    Added simple test file to make automatic CPAN scripts work nicer.
-#
-# Version 1.20  2005-06-29
-#    Added command completion.  Patch provided by mmcclure@pneservices.com
-#      Requires Term::ReadLine::Gnu
-#    Changed split to Text::ParseWords::shellwords.  mmcclure@pneservices.com
-
+use warnings;
 use vars qw($VERSION);
-$VERSION="1.20";
-
-########################################################################
+$VERSION="1.21";
 
 require 5.000;
 require Exporter;
@@ -97,14 +79,14 @@ BEGIN {
 
     # Command line completion
     # The strings for completion
-    my(@completions) = GetStrings(\@mode,$hashref);
+    my(@completions) = _GetStrings(\@mode,$hashref);
     $term->Attribs->{'completion_word'} = \@completions;
 
     while (defined ($line=$term->readline($prompt)) ) {
-      $err=Line(\@mode,$hashref,$line);
+      $err=_Line(\@mode,$hashref,$line);
 
       # Command line completion
-      @completions = GetStrings(\@mode,$hashref);
+      @completions = _GetStrings(\@mode,$hashref);
       $term->Attribs->{'completion_word'} = \@completions;
 
       if ($err =~ /^exit\[(\d+)\]$/) {
@@ -135,7 +117,7 @@ BEGIN {
     my($err,$cmd,@mode);
     my($ret)=0;
     foreach $cmd (@cmd) {
-      $err=Line(\@mode,$hashref,$cmd);
+      $err=_Line(\@mode,$hashref,$cmd);
       if ($err =~ /^exit\[(\d+)\]$/) {
         $ret=$1;
         last;
@@ -165,7 +147,7 @@ BEGIN {
   my $i;
   my @matches;
 
-  sub TUI_completion_function {
+  sub _TUI_completion_function {
     my($text,$state)=@_;
     $i = ($state ? $i : 0);
 
@@ -197,7 +179,7 @@ BEGIN {
 # Takes the current mode (as a list), the interface description, and
 # the current line and acts on the line.
 #
-sub Line {
+sub _Line {
   my($moderef,$cmdref,$line)=@_;
 
   $line =~ s/\s+$//;
@@ -205,18 +187,18 @@ sub Line {
   return  if (! $line);
 
   my(@cmd)=shellwords($line);
-  return Cmd($moderef,$cmdref,@cmd);
+  return _Cmd($moderef,$cmdref,@cmd);
 }
 
 BEGIN {
   my(%Cmds) =
     (
-     ".."     => [ "Go up one level",     "Mode",0 ],
-     "/"      => [ "Go to top level",     "Mode",1 ],
-     "help"   => [ "Online help",         "Help"   ],
-     "exit"   => [ "Exit",                "Exit",0 ],
-     "quit"   => [ "An alias for exit",   "Exit",0 ],
-     "abort"  => [ "Exit without saving", "Exit",1 ]
+     ".."     => [ "Go up one level",     "_Mode",0 ],
+     "/"      => [ "Go to top level",     "_Mode",1 ],
+     "help"   => [ "Online help",         "_Help"   ],
+     "exit"   => [ "Exit",                "_Exit",0 ],
+     "quit"   => [ "An alias for exit",   "_Exit",0 ],
+     "abort"  => [ "Exit without saving", "_Exit",1 ]
     );
   my($Moderef,$Cmdref);
 
@@ -224,14 +206,14 @@ BEGIN {
   # Returns an array of strings (commands or modes) that can be
   # entered given a mode
   #
-  sub GetStrings {
+  sub _GetStrings {
     my ($moderef,$cmdref) = @_;
     my @strings;
 
     if (!defined $Cmdref || ref $Cmdref ne "HASH") {
       $Cmdref = $cmdref;
     }
-    my $desc = GetMode(@{$moderef});
+    my $desc = _GetMode(@{$moderef});
     if ( ref $desc eq "HASH" ) {
       @strings = grep !/^\./, sort keys %$desc;
     }
@@ -243,7 +225,7 @@ BEGIN {
   # Takes the current mode (as a list), the interface description, and the
   # current command (as a list) and executes the command.
   #
-  sub Cmd {
+  sub _Cmd {
     my($moderef,$cmdref,@args)=@_;
     my($cmd)=shift(@args);
     $Moderef=$moderef;
@@ -254,27 +236,27 @@ BEGIN {
       $desc=$Cmds{lc $cmd};
 
     } else {
-      ($mode,@mode)=CheckMode(\$cmd);
+      ($mode,@mode)=_CheckMode(\$cmd);
 
       if ($mode && $cmd) {
         #
         # MODE/CMD [ARGS]
         # CMD [ARGS]
         #
-        $desc=CheckCmd($mode,$cmd);
+        $desc=_CheckCmd($mode,$cmd);
 
       } elsif ($mode && @args) {
         #
         # MODE CMD [ARGS]
         #
         $cmd=shift(@args);
-        $desc=CheckCmd($mode,$cmd);
+        $desc=_CheckCmd($mode,$cmd);
 
       } elsif ($mode) {
         #
         # MODE
         #
-        $desc=[ "","Mode",2,@mode ]
+        $desc=[ "","_Mode",2,@mode ]
       }
     }
 
@@ -297,7 +279,7 @@ BEGIN {
   # Takes a mode and/or command (as a list) and determines the mode
   # to use.  Returns a description of that mode.
   #
-  sub CheckMode {
+  sub _CheckMode {
     my($cmdref)=@_;
     my($cmd)=$$cmdref;
     my(@mode,$tmp2);
@@ -308,12 +290,12 @@ BEGIN {
       @mode=(@$Moderef,split(m|/|,$cmd));
     }
 
-    my($tmp)=GetMode(@mode);
+    my($tmp)=_GetMode(@mode);
     if ($tmp) {
       $$cmdref="";
     } else {
       $tmp2=pop(@mode);
-      $tmp=GetMode(@mode);
+      $tmp=_GetMode(@mode);
       $$cmdref=$tmp2  if ($tmp);
     }
 
@@ -325,7 +307,7 @@ BEGIN {
   # Takes a mode (as a list) and returns it's description (or "" if it's
   # not a mode).
   #
-  sub GetMode {
+  sub _GetMode {
     my(@mode)=@_;
     my($tmp)=$Cmdref;
     my($mode);
@@ -350,7 +332,7 @@ BEGIN {
   #    /     op=1
   #    MODE  op=2
   #
-  sub Mode {
+  sub _Mode {
     my($op,@mode)=@_;
 
     if ($op==0) {
@@ -375,16 +357,16 @@ BEGIN {
     return "";
   }
 
-  sub Help {
+  sub _Help {
     my($cmd,@args)=@_;
 
     my($tmp,$mode,@mode);
 
-    ($tmp,@mode)=CheckMode(\$cmd)  if ($cmd);
+    ($tmp,@mode)=_CheckMode(\$cmd)  if ($cmd);
     if (! $tmp) {
       @mode=@$Moderef;
       if (@mode) {
-        $tmp=GetMode(@mode);
+        $tmp=_GetMode(@mode);
       } else {
         $tmp=$Cmdref;
       }
@@ -448,7 +430,7 @@ BEGIN {
 #
 # Takes a mode and command and return a description of the command.
 #
-sub CheckCmd {
+sub _CheckCmd {
   my($moderef,$cmd)=@_;
   return $$moderef{$cmd}
     if (exists $$moderef{$cmd}  &&
@@ -456,7 +438,7 @@ sub CheckCmd {
   return ();
 }
 
-sub Exit {
+sub _Exit {
   my($flag)=@_;
   return "exit[$flag]";
 }
@@ -718,6 +700,11 @@ can use things like command history and command line editing.
 
 None known at this point.
 
+=head1 LICENSE
+
+This script is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself.
+
 =head1 AUTHOR
 
 Sullivan Beck (sbeck@cpan.org)
@@ -726,6 +713,12 @@ Sullivan Beck (sbeck@cpan.org)
 
 1;
 # Local Variables:
+# mode: cperl
 # indent-tabs-mode: nil
+# cperl-indent-level: 3
+# cperl-continued-statement-offset: 2
+# cperl-continued-brace-offset: 0
+# cperl-brace-offset: 0
+# cperl-brace-imaginary-offset: 0
+# cperl-label-offset: -2
 # End:
-
