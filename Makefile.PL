@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	NAME             => 'Term::TUI',
-	VERSION_FROM     => 'TUI.pm',
+	VERSION	         => '1.22',
 	($] >= 5.005
 	? (ABSTRACT=>'simple tool for building text-based user interfaces',
 	   AUTHOR  =>'Sullivan Beck (sbeck@cpan.org)')

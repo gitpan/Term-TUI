@@ -3,7 +3,7 @@ use Module::Build;
 
 my $build = Module::Build->new(
 	license            => 'perl',
-	dist_version       => '1.21',
+	dist_version       => '1.22',
 	dist_author        => 'Sullivan Beck <sbeck@cpan.org>',
 	module_name        => 'Term::TUI',
 	dist_abstract      => 'simple tool for building text-based user interfaces',

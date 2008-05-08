@@ -21,3 +21,5 @@ Version 1.21  2008-05-05
    Added Build.PL and several other things to meet requirements on
       http://cpants.perl.org/
 
+Version 1.22
+   Additional changes to meet requirements on http://cpants.perl.org/
