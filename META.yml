@@ -1,6 +1,6 @@
 ---
 name: Term-TUI
-version: 1.22
+version: 1.23
 author:
   - 'Sullivan Beck <sbeck@cpan.org>'
 abstract: simple tool for building text-based user interfaces
@@ -16,7 +16,7 @@ build_requires:
 provides:
   Term::TUI:
     file: lib/Term/TUI.pm
-    version: 1.22
+    version: 1.23
 generated_by: Module::Build version 0.2808
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html

@@ -30,7 +30,7 @@ package Term::TUI;
 
 use warnings;
 use vars qw($VERSION);
-$VERSION="1.22";
+$VERSION="1.23";
 
 require 5.000;
 require Exporter;

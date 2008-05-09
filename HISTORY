@@ -21,5 +21,12 @@ Version 1.21  2008-05-05
    Added Build.PL and several other things to meet requirements on
       http://cpants.perl.org/
 
-Version 1.22
+Version 1.22  2008-05-08
    Additional changes to meet requirements on http://cpants.perl.org/
+
+Version 1.23  2008-05-09
+   Final changes to meet requirements on http://cpants.perl.org/
+   Bug fix so it won't fail with "Too early to specify a build action"
+
+Version 1.24
+

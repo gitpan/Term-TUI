@@ -23,12 +23,12 @@ use Term::TUI qw(:all);
  }
 );
 
-$flag=&TUI_Run("sample",\%modes);
+$flag=TUI_Run("sample",\%modes);
 print "*** ABORT ***\n"  if ($flag);
 
 print "\nScript Sample:\n\n";
 
-&TUI_Script(\%modes,"/math add 3 5; string; subs barnyard 1 3");
+TUI_Script(\%modes,"/math add 3 5; string; subs barnyard 1 3");
 
 sub Add {
   my($hex,@nums)=@_;
@@ -39,7 +39,7 @@ sub Add {
     $tot += $n;
   }
   $tot = sprintf("%x",$tot)  if ($hex);
-  &TUI_Out("  Total = $tot\n");
+  TUI_Out("  Total = $tot\n");
   0;
 }
 
@@ -52,7 +52,7 @@ sub Mult {
     $tot *= $n;
   }
   $tot = sprintf("%x",$tot)  if ($hex);
-  &TUI_Out("  Total = $tot\n");
+  TUI_Out("  Total = $tot\n");
   0;
 }
 
@@ -61,14 +61,14 @@ sub Substring {
   $string=""  if (! defined $string);
   $pos=0  if (! defined $pos);
   $len=0  if (! defined $len);
-  &TUI_Out("  Substring = " . substr($string,$pos,$len) . "\n");
+  TUI_Out("  Substring = " . substr($string,$pos,$len) . "\n");
   0;
 }
 
 sub Length {
   my($string)=@_;
   $string=""  if (! defined $string);
-  &TUI_Out("  Length = " . length($string) . "\n");
+  TUI_Out("  Length = " . length($string) . "\n");
   0;
 }
 # Local Variables:
